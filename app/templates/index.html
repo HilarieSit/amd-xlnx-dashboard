@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="container-fluid">
+      <h2>AMD/XNLX Tracker</h2>
+      <div class="row row1"> 
+        <form id="duration" action="/" method="post" class="col-auto">
+          <input type="submit" name="duration" value="Day" class="inp alert alert-info" id="Day">
+          <input type="submit" name="duration" value="Month" class="inp alert alert-info month" id="Month">
+          <input type="submit" name="duration" value="Three Months" class="inp alert alert-info" id="Three_Months">
+          <input type="submit" name="duration" value="Year" class="inp alert alert-info" id="Year">
+        </form>
+        <div class="alert alert-info col lastalert"></div>
+      </div>
+      <div id="info">
+        <p><b>Exchange Ratio</b>: 1.7234 shares of AMD per share of XNLX</br>
+        <b>Timeline</b>: Expected to close first quarter of 2022</p>
+        <div>Page last updated: <span id="datetime"></span></div>
+      </div>
+      <div class="row"> 
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+          <h3> Stock Price </h3>
+          <div id='chart1' class='chart'></div>
+        </div>
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+          <h3> Stock Price Ratio </h3>
+          <div id='chart2' class='chart'></div>
+        </div>
+        <div class="col" id="chart3col">
+          <h3> Potential earnings per purchased XNLX stock </h3>
+          <p> If the merger happens, the stock price ratio of XNLX to AMD will rise 
+            to reach the exchange ratio of 1.7234. Assuming that the overall market 
+            does not drastically drop or rise, the possible outcomes 
+            are: 1) XNLX price goes up to 1.7234 times the AMD price, 2) AMD price goes 
+            down to &#126;0.5802 times the XNLX price, or most likely, 3) a linear combination of both. </p>
+          <p> The graph shows the potential earnings for a single XNLX stock, based on its purchase 
+            date, if the merger happened right now. The change in stock price from its purchase date to its current price 
+            is accounted for. The upper bound of the shaded region represents scenario 1 
+            and the lower bound represents scenario 2. The bolded line represents the scenario of  
+            XNLX rising and AMD falling an equivalent amount to meet in the middle.</p>
+          <div id='chart3' class='chart'></div>
+        </div>
+      </div>   
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+    <script type='text/javascript'>
+      // add active class to tab
+      var dur = {{duration | tojson}};
+      var day_btn = document.getElementById(dur);
+      day_btn.className += " active";
+      // hide chart 3 if day view
+      if (dur == "Day") {
+        document.getElementById('chart3col').style.display = 'none';
+      }
+      var charts = ["chart1","chart2","chart3"];
+      // load json graphs from flask to div
+      function loadgraphs(){
+        var graph1 = {{graph1JSON | safe}};
+        Plotly.newPlot('chart1',graph1);
+        var graph2 = {{graph2JSON | safe}};
+        Plotly.newPlot('chart2',graph2);
+        var graph3 = {{graph3JSON | safe}};
+        Plotly.newPlot('chart3',graph3);
+      }
+      // get current date/time
+      function get_datetime(){
+        var options = {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric"
+        };
+        var newDate = new Date().toLocaleString("en", options);
+        document.getElementById('datetime').innerHTML = newDate
+      }
+      // run on page load
+      get_datetime()
+      loadgraphs()
+      // update every 5 minutes
+      setInterval(function(){
+        get_datetime()
+        loadgraphs()
+        }, 5*60*1000);
+      // resize plotly graph on window resize
+      window.onresize = function() {
+        for (let i = 0; i < charts.length; i++) {
+          var w = document.getElementById(charts[i]).offsetWidth;
+          var h = document.getElementById(charts[i]).offsetHeight;
+          var update = {
+            width: w,
+            height: h
+          };
+          Plotly.relayout(charts[i], update);
+        }
+      }
+    </script>  
+  </body> 
+
+</html>
